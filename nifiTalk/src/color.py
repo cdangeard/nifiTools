@@ -1,7 +1,10 @@
 from .nifiAPI import nifiAPI
 import json
 
-def APIcolorProcessor(nifiAPI : nifiAPI, processorId : str, colorPatern : dict, verbose : bool = False) -> None:
+def APIcolorProcessor(nifiAPI : nifiAPI, 
+                      processorId : str, 
+                      colorPatern : dict, 
+                      verbose : bool = False) -> None:
     payload = nifiAPI.getProcessor(processorId)
     type = payload['component']['type']
     if type in colorPatern.keys():
@@ -35,13 +38,14 @@ def APIcolorProcessor(nifiAPI : nifiAPI, processorId : str, colorPatern : dict, 
         else :
             freshpayload['revision']['clientId'] = nifiAPI.client
             freshpayload['revision']['version'] = 0
-        print('new payload: ' + json.dumps(freshpayload['revision'], indent= 2))
+        if verbose:
+            print('new payload: ' + json.dumps(freshpayload['revision'], indent= 2))
         return nifiAPI.callAPI(f"/processors/{processorId}", "PUT", json.dumps(freshpayload, indent= 2))
     else:
         print('invalid color ' + color)
         return None
 
 def APIcolorProcessGroup(nifiAPI : nifiAPI, processGroupId : str, colorPatern : dict, recursive : bool = False, verbose : bool = False) -> None:
-    processors = nifiAPI.getProcessorsIdInPG(processGroupId, recursive)
+    processors = nifiAPI.getProcessorsList(processGroupId, recursive)
     for processorId in processors:
         APIcolorProcessor(nifiAPI, processorId, colorPatern, verbose)

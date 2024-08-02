@@ -3,18 +3,17 @@ import plotly.express as px
 import re
 import pandas as pd
 import numpy as np
-from src.app_func import *
 
-st.set_page_config(page_title="Monitor Process Group Execution", page_icon="", layout="wide")
-st.sidebar.header("Monitoring : ")
-st.title('Monitoring Nifi')
+from nifiTalk.src.nifiAPI import nifiAPI
+from src.aagridHierachical import *
+from src.decorators import wideScreen
 
 UUID_PATTERN = re.compile(r'^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$', re.IGNORECASE)
 
-if 'connected' not in st.session_state or not st.session_state.connected:
-    st.write('Not connected go to Connection panel : ')
-    st.page_link("app.py", label="Connection", icon="🔗")
-else:
+@wideScreen
+def monitoring(nifi : nifiAPI):
+    st.sidebar.header("Monitoring : ")
+    st.title('Monitoring Nifi')
     #Input process group
     Processgroup = st.text_input('Process group id', value = st.session_state.root)
     st.sidebar.text(
@@ -119,3 +118,5 @@ else:
                 },
                 hide_index=True
             )
+
+monitoring(st.session_state.nifi)

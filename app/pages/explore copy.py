@@ -1,5 +1,5 @@
 import streamlit as st
-from src.app_func import *
+from app.src.aagridHierachical import *
 
 
 if 'connected' not in st.session_state or not st.session_state.connected:

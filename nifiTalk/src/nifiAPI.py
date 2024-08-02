@@ -177,7 +177,7 @@ class nifiAPI:
                 sortie.extend(self.getProcessGroupsInfosList(pgId['id'], recursive))
         return sortie
     
-    def getProcessGroupInfos(self, processGroupId: str, recursive : bool = False) -> dict:
+    def getProcessGroupsInfos(self, processGroupId: str, recursive : bool = False) -> dict:
         """
         """
         response = self.callAPI(f"/process-groups/{processGroupId}/process-groups",
@@ -187,7 +187,7 @@ class nifiAPI:
                               for pg in response['processGroups']}
         if recursive:
             for pgId in [id for id in sortie.keys()]:#avoid changing dic size during iteration
-                pgSortie = self.getProcessGroupInfos(pgId, recursive)
+                pgSortie = self.getProcessGroupsInfos(pgId, recursive)
                 sortie.update(pgSortie)
         return sortie
 
