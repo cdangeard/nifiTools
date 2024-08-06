@@ -1,6 +1,5 @@
 from .nifiAPI import nifiAPI
 import pandas as pd
-import asyncio
 import time
 import re
 from typing import Union
@@ -37,7 +36,7 @@ class Monitor:
         numberOfData = int(rate*maxDuration)
         data = {k : {} for k in range(0, numberOfData, 1)}
         #list of process groups inside the PG
-        PGs = self.nifiAPI.getProcessGroupList(processGroupId=processGroupId, recursive=True)
+        PGs = self.nifiAPI.getProcessGroupsList(processGroupId=processGroupId, recursive=True)
         PGs.append(processGroupId)
         for i in range(0, numberOfData, 1):
             start = time.perf_counter()

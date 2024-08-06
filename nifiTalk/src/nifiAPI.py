@@ -134,7 +134,7 @@ class nifiAPI:
         """
         return self.callAPI(f"/processors/{processorId}", "GET", None)
   
-    def getProcessGroupList(self, processGroupId : str, recursive : bool = False) -> list:
+    def getProcessGroupsList(self, processGroupId : str, recursive : bool = False) -> list:
         """
         Get id of process group contained in a process group
 
@@ -150,7 +150,7 @@ class nifiAPI:
         sortie = [pg['id'] for pg in response['processGroups']]
         if recursive:
             for pgId in sortie:
-                sortie.extend(self.getProcessGroupList(pgId, recursive))
+                sortie.extend(self.getProcessGroupsList(pgId, recursive))
         return sortie
     
     def getProcessGroupsInfosList(self, processGroupId : str, recursive : bool = False) -> list:
@@ -205,8 +205,8 @@ class nifiAPI:
         sortie = [proc['id'] for proc in response['processors']]
         if recursive:
             #get all process groups
-            pgs = self.getProcessGroupList(processGroupId, recursive = False)
-            for pgId in pgs['processGroups']:
+            pgs = self.getProcessGroupsList(processGroupId, recursive = False)
+            for pgId in pgs:
                 pgSortie = self.getProcessorsList(pgId, recursive)
                 sortie.extend(pgSortie)
         return sortie
@@ -236,7 +236,7 @@ class nifiAPI:
         sortie[processGroupId] = {}
         if recursive:
             #get all process groups
-            pgs = self.getProcessGroupList(processGroupId, recursive = False)
+            pgs = self.getProcessGroupsList(processGroupId, recursive = False)
             for pg in pgs:
                 pgSortie = self.getProcessorsInfos(pg, recursive)
                 pgSortie[pg] = {'parentGroupId' : processGroupId}
@@ -258,7 +258,7 @@ class nifiAPI:
         sortie = [conn['id'] for conn in response['connections']]
         if recursive:
             #get all process groups
-            pgs = self.getProcessGroupList(processGroupId, recursive = False)
+            pgs = self.getProcessGroupsList(processGroupId, recursive = False)
             for pgId in pgs:
                 pgSortie = self.getConnectionsList(pgId, recursive)
                 sortie.extend(pgSortie)
@@ -296,7 +296,7 @@ class nifiAPI:
                         for ctrl in res['controllerServices']}
         if recursive:
             #get all process groups
-            pgs = self.getProcessGroupList(processGroupId, recursive = False)
+            pgs = self.getProcessGroupsList(processGroupId, recursive = False)
             for pgId in pgs:
                 pgSortie = self.getControlerServices(pgId, recursive)
                 sortie.update(pgSortie)
@@ -311,7 +311,7 @@ class nifiAPI:
         ----------
         processGroupId : uuid of process group
         """
-        subProcessGroup = self.getProcessGroupList(processGroupId, recursive=True)
+        subProcessGroup = self.getProcessGroupsList(processGroupId, recursive=True)
         starter = []
         for sub in subProcessGroup + [processGroupId]:
             a = self.callAPI(f"/process-groups/{sub}/connections", "GET", None)

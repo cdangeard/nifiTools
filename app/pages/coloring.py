@@ -24,7 +24,7 @@ def coloring(nifi : nifiAPI, defaultColorPath = 'app/data/colorPatern.json'):
         colorPatern = json.load(f)
     
     colorUpload = st.file_uploader(
-        label = f'Color Patern (par default : {os.getcwd()}{defaultColorPath})',
+        label = f'Color Patern (par default : {os.getcwd()}{defaultColorPath.replace('/','\\')})',
         type = ['.json', '.csv']
         )
     
@@ -53,7 +53,7 @@ def coloring(nifi : nifiAPI, defaultColorPath = 'app/data/colorPatern.json'):
             label= 'Process group id',
             placeholder = 'Process group à peindre',
             value = st.session_state.root)
-        
+        recursive = st.checkbox('Recursive', value = False)
         jsonPaternTable = st.data_editor(
             colorPatern,
             num_rows="dynamic",
@@ -74,9 +74,16 @@ def coloring(nifi : nifiAPI, defaultColorPath = 'app/data/colorPatern.json'):
         if not re.match(UUID_PATTERN, Processgroup):
             st.error('Process group uuid is not valid')
             st.stop()
-        APIcolorProcessGroup(nifiAPI = nifi,
-                            processGroupId = Processgroup,
-                            colorPatern = jsonPaternTable)
-            
+        try:
+            c = APIcolorProcessGroup(nifiAPI = nifi,
+                                processGroupId = Processgroup,
+                                colorPatern = jsonPaternTable,
+                                recursive = recursive,
+                                results=True)
+        except:
+            st.error(f'Error while painting process group : {Processgroup}', icon="🚨")
+            st.stop()
+        st.success(f'Painting process group : {Processgroup}', icon="✅")
+        st.dataframe(pd.DataFrame.from_dict(c, columns=['Processor Identifier','Colored?', 'Reason'], orient='index'), hide_index=True)
 
 coloring(st.session_state.nifi)

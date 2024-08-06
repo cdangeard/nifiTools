@@ -1,7 +1,7 @@
 import pandas as pd
 import pandas as pd
 from st_aggrid import JsCode, AgGrid, GridOptionsBuilder, GridUpdateMode
-
+import streamlit.components.v1 as components
 def createHierachicalDf(dictIn : dict,  parentCol : str = 'parentGroupId',
                         linkChar : bool = True, racine = None, depth : int = 0):
     """
