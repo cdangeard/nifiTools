@@ -57,7 +57,7 @@ def monitoring(nifi : nifiAPI):
                 pd.DataFrame(createListForAgGrid(processorInfos))
             )
             #Loading bar
-            pgInside = st.session_state.nifi.getProcessGroupList(processGroupId=Processgroup, 
+            pgInside = st.session_state.nifi.getProcessGroupsList(processGroupId=Processgroup, 
                                                                    recursive=True)
             pgInside.append(Processgroup)
             dataDict = st.session_state.monitor.monitor_PG(Processgroup,

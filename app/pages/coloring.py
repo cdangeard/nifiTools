@@ -9,20 +9,16 @@ import re
 UUID_PATTERN = re.compile(r'^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$', re.IGNORECASE)
 
 @st.cache_data
-def verifyCSV(file):
-    return True
-
-@st.cache_data
-def verifyJSON(file):
-    return True
+def extractCSV(file):
+    colorPatern = pd.read_csv(file).to_dict('records')
+    keys = [k for k in colorPatern[0].keys()]
+    if len(keys) != 2:
+        raise Exception(ValueError, 'ncol != 2')
+    return {r[keys[0]] : r[keys[1]]  for r in colorPatern}
 
 @connected
 def coloring(nifi : nifiAPI, defaultColorPath = 'app/data/colorPatern.json'):
     st.write('# Painting your Nifi')
-    
-    with open(defaultColorPath) as f:
-        colorPatern = json.load(f)
-    
     colorUpload = st.file_uploader(
         label = f'Color Patern (par default : {os.getcwd()}{defaultColorPath.replace('/','\\')})',
         type = ['.json', '.csv']
@@ -31,23 +27,22 @@ def coloring(nifi : nifiAPI, defaultColorPath = 'app/data/colorPatern.json'):
     if colorUpload:
         if colorUpload.name[-4:] == '.csv':
             try:
-                colorPatern = pd.read_csv(colorUpload).to_dict('records')
-                keys = [k for k in colorPatern[0].keys()]
-                if len(keys) != 2:
-                    raise Exception(ValueError, 'ncol != 2')
-                colorPatern = {r[keys[0]] : r[keys[1]]  for r in colorPatern}
+                colorPatern = extractCSV(colorUpload)
             except ValueError as e:
                 st.error(f'erreur de lecture {e}')
                 st.stop()
             st.success(f'read csv File : {colorUpload.name}')
         if colorUpload.name[-5:] == '.json':
             try:
-                colorPatern = json.load(f)
+                colorPatern = json.load(colorUpload)
             except ValueError as e:
                 st.error(f'erreur de lecture {e}')
                 st.stop()
             st.success(f'read json File : {colorUpload.name}')
-
+    else:
+        with open(defaultColorPath) as f:
+            colorPatern = json.load(f)
+    
     with st.form('coloring'):
         Processgroup = st.text_input(
             label= 'Process group id',
@@ -79,6 +74,7 @@ def coloring(nifi : nifiAPI, defaultColorPath = 'app/data/colorPatern.json'):
                                 processGroupId = Processgroup,
                                 colorPatern = jsonPaternTable,
                                 recursive = recursive,
+                                verbose=True,
                                 results=True)
         except:
             st.error(f'Error while painting process group : {Processgroup}', icon="🚨")

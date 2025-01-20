@@ -9,7 +9,7 @@ def callAPI(nifi : nifiAPI):
     submit = st.button('submit')
 
     if submit:
-        res = nifi.callAPI(endpoint=endpoint, type=typeRequest, payload=content)
+        res = nifi.callAPI(endpoint=endpoint, requestType=typeRequest, payload=content)
         st.write(res)
 
 callAPI(st.session_state.nifi)

@@ -49,6 +49,7 @@ def APIcolorProcessGroup(nifiAPI : nifiAPI, processGroupId : str, colorPatern : 
                          recursive : bool = False, verbose : bool = False,
                          results : bool = False) -> dict | None:
     processors = nifiAPI.getProcessorsList(processGroupId, recursive)
+    # On rempli un datafame avec les resultats des coloriages
     if results:
         dict = {processor : [] for processor in processors}
     for processorId in processors:

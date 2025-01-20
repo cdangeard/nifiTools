@@ -12,7 +12,7 @@ class nifiAPI:
         self.host = host + "nifi-api"
         self.verbose = verbose
         if client:
-            self.client = self.callAPI('/flow/client-id', type='GET', payload=None)
+            self.client = self.callAPI('/flow/client-id', requestType='GET', payload=None)
         else:
             self.client = str(uuid.uuid4())
             print('generated client id: ' + self.client)
@@ -30,7 +30,7 @@ class nifiAPI:
         """
         return requests.request(type, url, headers=headers, data=payload, verify=False)
 
-    def callAPI(self, endpoint : str, type : str, payload : dict):
+    def callAPI(self, endpoint : str, requestType : str, payload : dict = None):
         """
         Makes an API call
         
@@ -43,14 +43,21 @@ class nifiAPI:
         headers = {
         'Content-Type': 'application/json'
         }
+        
         if endpoint[0] != "/":
             endpoint = "/" + endpoint
         url = self.host + endpoint
+        
         if self.verbose:
             print("calling " + url)
             if payload is not None:
                 print("with payload: " + json.dumps(payload, indent= 2))
-        response = self.makeRequest(url, headers, json.dumps(payload), type)
+        
+        # Json dump dict payload
+        if type(payload) == dict:
+            payload = json.dumps(payload)
+        
+        response = self.makeRequest(url, headers, payload, requestType)
         if response.status_code != 200:
             print(response.text)
             raise Exception(f"API call failed with status code: {response.status_code}\n {response.text}")
@@ -124,6 +131,7 @@ class nifiAPI:
         Get id of root process group
         """
         return self.callAPI("/flow/process-groups/root", "GET", None)['processGroupFlow']['id']
+    
     def getProcessor(self, processorId : str) -> dict:
         """
         Get details of a processor
@@ -146,7 +154,7 @@ class nifiAPI:
                     the processor in all process groups
         """
         response = self.callAPI(f"/process-groups/{processGroupId}/process-groups",
-                                type =  "GET", payload = None)
+                                requestType =  "GET", payload = None)
         sortie = [pg['id'] for pg in response['processGroups']]
         if recursive:
             for pgId in sortie:
@@ -168,7 +176,7 @@ class nifiAPI:
                     the processor in all process groups
         """
         response = self.callAPI(f"/process-groups/{processGroupId}/process-groups",
-                                type =  "GET", payload = None)
+                                requestType =  "GET", payload = None)
         sortie = [{'id' :pg['id'], 
                    'name' : pg['component']['name']} 
                    for pg in response['processGroups']]
@@ -181,7 +189,7 @@ class nifiAPI:
         """
         """
         response = self.callAPI(f"/process-groups/{processGroupId}/process-groups",
-                                type =  "GET", payload = None)
+                                requestType =  "GET", payload = None)
         sortie = {pg['id'] : {'parentGroupId' : processGroupId, 
                               'name' : pg['component']['name']} 
                               for pg in response['processGroups']}
@@ -254,7 +262,7 @@ class nifiAPI:
         recursive : True if you want to get all connections in all process groups
         """
         response = self.callAPI(f"/process-groups/{processGroupId}/connections",
-                                type = "GET", payload = None)
+                                requestType = "GET", payload = None)
         sortie = [conn['id'] for conn in response['connections']]
         if recursive:
             #get all process groups
@@ -273,7 +281,7 @@ class nifiAPI:
         processGroupId : uuid of process group
         """
         return self.callAPI(f"flow/process-groups/{processGroupId}/status",
-                            type = "GET", payload = None)
+                            requestType = "GET", payload = None)
 
     def getControlerServices(self, processGroupId : str,
                                   recursive : bool = False) -> dict:
@@ -287,7 +295,7 @@ class nifiAPI:
         recursive : True if you want to get all controlers in all process groups
         """
         res = self.callAPI(endpoint=f'/flow/process-groups/{processGroupId}/controller-services',
-                            type='GET',payload= None)
+                            requestType='GET',payload= None)
         sortie =  {ctrl['id'] : {'parentGroupId' : ctrl['parentGroupId'],
                                         'name' : ctrl['component']['name'], 
                                         'state' : ctrl['component']['state'],
@@ -339,7 +347,7 @@ class nifiAPI_userAuth(nifiAPI):
             self.client = str(uuid.uuid4())
             print('generated client id: ' + self.client)
         else:
-            self.client = self.callAPI('/flow/client-id', type='GET', payload=None)
+            self.client = self.callAPI('/flow/client-id', requestType='GET', payload=None)
     def fetchToken(self):
         """
         Fetches a new token with username and password
@@ -399,9 +407,11 @@ class nifiAPI_certAuth(nifiAPI):
         """
         response = requests.request(type, url, headers=headers,
                                     data=payload, verify=self.pem, 
-                                    cert=(self.cert, self.key))
+                                    cert=(self.cert, self.key),
+                                    )
+        
         if response.status_code != 200:
             print(response.text)
             raise Exception("API call failed with status code: " +
-                             str(response.status_code))
+                             str(response.status_code) +'\n' + str(response.text))
         return response
